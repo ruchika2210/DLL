@@ -1,0 +1,82 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
+
+type
+  TForm1 = class(TForm)
+    Edit1: TEdit;
+    Edit2: TEdit;
+    Button1: TButton;
+    Button2: TButton;
+    Label1: TLabel;
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+  TMaxFun = function(i,j: integer):integer; stdcall;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+// This declares Max as a function which should be found
+// externally, in the dll
+function Max(i, j: Integer): Integer; stdcall; external 'your dll path';
+
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  i,j : integer;
+begin
+    i := strtoint(Edit1.Text);
+    j := strtoint(Edit2.Text);
+
+    label1.Caption := inttostr(Max(i,j));
+
+end;
+// This calls the DLL directly through the Win API.
+// More code, more control.
+
+procedure TForm1.Button2Click(Sender: TObject);
+var i, j, k :integer;
+Handle : THandle;
+  // mmax is a function variable; see type declaration
+   // of TMaxFun above.
+   mmax : TMaxFun;
+begin
+     i := strtoint(Edit1.Text);
+     j := strtoint(Edit2.Text);
+        // Load the library
+   Handle := LoadLibrary('your dll path');
+
+   //if successfull
+   if Handle <> 0 then
+   begin
+     //Assign function Max from the DLL to the
+     //function variable max
+     @mmax := GetProcAddress(Handle, 'Max');
+
+     //if successfull
+
+     if @mmax <> nil then
+     begin
+       k := mmax(i,j);
+       Label1.Caption := inttostr(k);
+     end;
+   end;
+      //unload library
+   FreeLibrary(Handle);
+end;
+
+end.
+
+
